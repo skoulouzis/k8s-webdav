@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
+  labels:
+    {{- include "carsharing-helm-charts.labels" . | nindent 4 }}
+    app: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "carsharing-helm-charts.selectorLabels" . | nindent 6 }}
+      app: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
+  template:
+    metadata:
+      {{- with .Values.mongodb.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "carsharing-helm-charts.selectorLabels" . | nindent 8 }}
+        app: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
+    spec:
+      {{- with .Values.mongodb.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "carsharing-helm-charts.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.mongodb.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-mongodb
+          env:
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: {{ .Values.mongodb.env.mongo_initdb_root_password }}
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: {{ .Values.mongodb.env.mongo_initdb_root_username }}
+          securityContext:
+            {{- toYaml .Values.mongodb.securityContext | nindent 12 }}
+          image: "{{ .Values.mongodb.image.repository }}:{{ .Values.mongodb.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.mongodb.image.pullPolicy }}
+#          livenessProbe:
+#            httpGet:
+#              path: /
+#              port: http1
+#          readinessProbe:
+#            httpGet:
+#              path: /
+#              port: http1
+          ports:
+            - name: http1
+              containerPort: 27017
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.mongodb.resources | nindent 12 }}
+      {{- with .Values.mongodb.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mongodb.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mongodb.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
+  labels:
+    {{- include "carsharing-helm-charts.labels" . | nindent 4 }}
+    app: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
+spec:
+  type: {{ .Values.mongodb.service.type }}
+  ports:
+    - port: {{ .Values.mongodb.service.port }}
+      targetPort: http1
+      protocol: TCP
+      name: http1
+  selector:
+    {{- include "carsharing-helm-charts.selectorLabels" . | nindent 4 }}
+    app: {{ include "carsharing-helm-charts.fullname" . }}-mongodb
